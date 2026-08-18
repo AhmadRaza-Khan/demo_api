@@ -43,4 +43,4 @@ next-env.d.ts
 # generated teaching artifacts (contain live credentials / regenerable docs)
 API-Integration-Guide.pdf
 postman_collection.json
-hmac-api-client-demo.php
+demo.php

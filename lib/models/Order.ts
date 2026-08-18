@@ -9,6 +9,7 @@ export interface OrderItem {
 
 export interface OrderDoc {
   merchantId: string;
+  orderId: string;
   apiVersion: string;
   customer: { name: string; email: string };
   items: OrderItem[];
@@ -29,6 +30,9 @@ const OrderItemSchema = new Schema<OrderItem>(
 
 const OrderSchema = new Schema<OrderDoc>({
   merchantId: { type: String, required: true, index: true },
+  // The merchant's own order reference. Unique per merchant, so a merchant
+  // can never accidentally (or maliciously) submit the same order twice.
+  orderId: { type: String, required: true },
   apiVersion: { type: String, required: true },
   customer: {
     name: { type: String, required: true },
@@ -39,6 +43,8 @@ const OrderSchema = new Schema<OrderDoc>({
   status: { type: String, default: "pending" },
   createdAt: { type: Date, default: Date.now },
 });
+
+OrderSchema.index({ merchantId: 1, orderId: 1 }, { unique: true });
 
 export default (models.Order as mongoose.Model<OrderDoc>) ||
   model<OrderDoc>("Order", OrderSchema);

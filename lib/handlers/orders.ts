@@ -2,10 +2,14 @@ import { connectDB } from "@/lib/db";
 import Product from "@/lib/models/Product";
 import Order from "@/lib/models/Order";
 import { OrderInput } from "@/lib/validation/order";
+import { apiError, apiSuccess } from "@/lib/http";
 
 export type CreateOrderResult =
-  | { ok: true; order: InstanceType<typeof Order> }
+  | { ok: true; duplicate: false; order: InstanceType<typeof Order> }
+  | { ok: true; duplicate: true; order: InstanceType<typeof Order> }
   | { ok: false; details: { field: string; message: string }[] };
+
+const DUPLICATE_KEY_ERROR_CODE = 11000;
 
 export async function createOrder(
   merchantId: string,
@@ -13,6 +17,11 @@ export async function createOrder(
   input: OrderInput
 ): Promise<CreateOrderResult> {
   await connectDB();
+
+  const existing = await Order.findOne({ merchantId, orderId: input.orderId });
+  if (existing) {
+    return { ok: true, duplicate: true, order: existing };
+  }
 
   const productIds = input.items.map((i) => i.productId);
   const products = await Product.find({ productId: { $in: productIds } }).lean();
@@ -43,14 +52,42 @@ export async function createOrder(
     items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0) * 100
   ) / 100;
 
-  const order = await Order.create({
-    merchantId,
-    apiVersion,
-    customer: input.customer,
-    items,
-    total,
-    status: "pending",
-  });
+  try {
+    const order = await Order.create({
+      merchantId,
+      orderId: input.orderId,
+      apiVersion,
+      customer: input.customer,
+      items,
+      total,
+      status: "pending",
+    });
+    return { ok: true, duplicate: false, order };
+  } catch (err: unknown) {
+    // Two requests for the same orderId raced past the findOne check above —
+    // the unique index caught it. Treat it the same as a normal duplicate.
+    if (typeof err === "object" && err !== null && "code" in err && err.code === DUPLICATE_KEY_ERROR_CODE) {
+      const raceWinner = await Order.findOne({ merchantId, orderId: input.orderId });
+      if (raceWinner) return { ok: true, duplicate: true, order: raceWinner };
+    }
+    throw err;
+  }
+}
 
-  return { ok: true, order };
+// Shared by every version's order route so the duplicate-order response
+// (a warning, not an error — the merchant already has this order recorded)
+// stays identical everywhere.
+export function orderResultToResponse(result: CreateOrderResult) {
+  if (!result.ok) {
+    return apiError(400, "validation_failed", "Order payload is invalid.", result.details);
+  }
+
+  if (result.duplicate) {
+    return apiSuccess(200, `Order "${result.order.orderId}" already exists for this merchant.`, {
+      warning: "order_already_exists",
+      order: result.order,
+    });
+  }
+
+  return apiSuccess(201, "Order placed successfully", { order: result.order });
 }

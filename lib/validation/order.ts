@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 export const orderSchema = z.object({
+  // The merchant's own order reference — resubmitting the same orderId for
+  // the same merchant is treated as a duplicate, not a new order.
+  orderId: z.string().trim().min(1, "orderId is required"),
   customer: z.object({
     name: z.string().trim().min(1, "customer.name is required"),
     email: z.string().trim().email("customer.email must be a valid email address"),

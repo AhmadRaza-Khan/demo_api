@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { resolveV6 } from "@/lib/auth/resolvers/v6";
 import { orderSchema, formatZodError } from "@/lib/validation/order";
-import { createOrder } from "@/lib/handlers/orders";
-import { apiError, apiSuccess } from "@/lib/http";
+import { createOrder, orderResultToResponse } from "@/lib/handlers/orders";
+import { apiError } from "@/lib/http";
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
@@ -22,9 +22,5 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await createOrder(auth.merchantId, "v6", parsed.data);
-  if (!result.ok) {
-    return apiError(400, "validation_failed", "Order payload is invalid.", result.details);
-  }
-
-  return apiSuccess(201, "Order placed successfully", { order: result.order });
+  return orderResultToResponse(result);
 }

@@ -13,6 +13,7 @@ interface Order {
   _id: string;
   merchantId: string;
   merchantName: string;
+  orderId?: string;
   apiVersion: string;
   customer: { name: string; email: string };
   items: OrderItem[];
@@ -56,6 +57,7 @@ export default function OrdersPage() {
           <thead>
             <tr className="border-b border-black/10 text-left dark:border-white/10">
               <th className="py-2 pr-4">Merchant</th>
+              <th className="py-2 pr-4">Order Id</th>
               <th className="py-2 pr-4">Version</th>
               <th className="py-2 pr-4">Customer</th>
               <th className="py-2 pr-4">Items</th>
@@ -67,14 +69,14 @@ export default function OrdersPage() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="py-4 text-zinc-500">
+                <td colSpan={8} className="py-4 text-zinc-500">
                   Loading...
                 </td>
               </tr>
             )}
             {!loading && orders.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-4 text-zinc-500">
+                <td colSpan={8} className="py-4 text-zinc-500">
                   No orders yet.
                 </td>
               </tr>
@@ -82,6 +84,7 @@ export default function OrdersPage() {
             {orders.map((o) => (
               <tr key={o._id} className="border-b border-black/5 align-top dark:border-white/5">
                 <td className="py-2 pr-4 font-medium">{o.merchantName}</td>
+                <td className="py-2 pr-4 font-mono text-xs">{o.orderId ?? "—"}</td>
                 <td className="py-2 pr-4">
                   <span
                     className={`rounded px-2 py-0.5 text-xs font-medium ${

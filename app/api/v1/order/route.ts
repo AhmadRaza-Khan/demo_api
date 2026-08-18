@@ -2,8 +2,8 @@ import { NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import Merchant from "@/lib/models/Merchant";
 import { orderSchema, formatZodError } from "@/lib/validation/order";
-import { createOrder } from "@/lib/handlers/orders";
-import { apiError, apiSuccess } from "@/lib/http";
+import { createOrder, orderResultToResponse } from "@/lib/handlers/orders";
+import { apiError } from "@/lib/http";
 
 // v1: no auth at all. Because there is nothing to authenticate the caller,
 // the merchant has to be identified explicitly in the body — which means
@@ -36,9 +36,5 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await createOrder(merchant.clientId, "v1", parsed.data);
-  if (!result.ok) {
-    return apiError(400, "validation_failed", "Order payload is invalid.", result.details);
-  }
-
-  return apiSuccess(201, "Order placed successfully", { order: result.order });
+  return orderResultToResponse(result);
 }

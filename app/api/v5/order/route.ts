@@ -1,0 +1,27 @@
+import { NextRequest } from "next/server";
+import { resolveV5 } from "@/lib/auth/resolvers/v5";
+import { orderSchema, formatZodError } from "@/lib/validation/order";
+import { createOrder } from "@/lib/handlers/orders";
+import { apiError, apiSuccess } from "@/lib/http";
+
+export async function POST(req: NextRequest) {
+  const auth = await resolveV5(req);
+  if (!auth.ok) return auth.response;
+
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return apiError(400, "invalid_json", "Request body must be valid JSON.");
+  }
+
+  const parsed = orderSchema.safeParse(body);
+  if (!parsed.success) {
+    return apiError(400, "validation_failed", "Order payload is invalid.", formatZodError(parsed.error));
+  }
+
+  const result = await createOrder(auth.merchantId, "v5", parsed.data);
+  if (!result.ok) {
+    return apiError(400, "validation_failed", "Order payload is invalid.", result.details);
+  }
+
+  return apiSuccess(201, "Order placed successfully", { order: result.order });
+}

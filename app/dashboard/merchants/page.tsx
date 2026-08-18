@@ -86,6 +86,12 @@ export default function MerchantsPage() {
     setCreating(false);
   }
 
+  async function handleDelete(id: string, merchantName: string) {
+    if (!confirm(`Delete merchant "${merchantName}"? This cannot be undone.`)) return;
+    await fetch(`/api/admin/merchants/${id}`, { method: "DELETE" });
+    await loadMerchants();
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -130,19 +136,20 @@ export default function MerchantsPage() {
               <th className="py-2 pr-4">Username</th>
               <th className="py-2 pr-4">Password</th>
               <th className="py-2 pr-4">Created</th>
+              <th className="py-2 pr-4"></th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="py-4 text-zinc-500">
+                <td colSpan={8} className="py-4 text-zinc-500">
                   Loading...
                 </td>
               </tr>
             )}
             {!loading && merchants.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-4 text-zinc-500">
+                <td colSpan={8} className="py-4 text-zinc-500">
                   No merchants yet — create one above.
                 </td>
               </tr>
@@ -167,6 +174,15 @@ export default function MerchantsPage() {
                 </td>
                 <td className="py-2 pr-4 whitespace-nowrap text-zinc-500">
                   {new Date(m.createdAt).toLocaleString()}
+                </td>
+                <td className="py-2 pr-4">
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(m._id, m.name)}
+                    className="text-xs text-red-600 hover:underline dark:text-red-400"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}

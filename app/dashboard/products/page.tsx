@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 interface Product {
-  productId: number;
+  productId: string;
   title: string;
   category: string;
   price: number;
@@ -11,7 +11,7 @@ interface Product {
 }
 
 interface InventoryItem {
-  productId: number;
+  productId: string;
   title: string;
   quantity: number;
   updatedAt: string;

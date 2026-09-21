@@ -11,7 +11,7 @@ export const orderSchema = z.object({
   items: z
     .array(
       z.object({
-        productId: z.number().int().positive("items[].productId must be a positive integer"),
+        productId: z.string().trim().min(1, "items[].productId is required"),
         quantity: z.number().int().positive("items[].quantity must be a positive integer"),
       })
     )

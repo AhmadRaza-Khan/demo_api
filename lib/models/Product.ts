@@ -1,7 +1,7 @@
 import mongoose, { Schema, models, model } from "mongoose";
 
 export interface ProductDoc {
-  productId: number;
+  productId: string;
   title: string;
   description: string;
   category: string;
@@ -12,7 +12,8 @@ export interface ProductDoc {
 }
 
 const ProductSchema = new Schema<ProductDoc>({
-  productId: { type: Number, required: true, unique: true, index: true },
+  // DummyJSON's own SKU (e.g. "BEA-ESS-ESS-001"), used as the public product id.
+  productId: { type: String, required: true, unique: true, index: true },
   title: { type: String, required: true },
   description: { type: String, default: "" },
   category: { type: String, default: "" },

@@ -6,12 +6,7 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const productId = Number(id);
-
-  if (!Number.isInteger(productId)) {
-    return apiError(400, "invalid_id", "Product id must be an integer.");
-  }
+  const { id: productId } = await params;
 
   const product = await getProductById(productId);
   if (!product) {

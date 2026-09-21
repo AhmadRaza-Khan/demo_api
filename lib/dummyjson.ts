@@ -4,6 +4,7 @@ import Inventory from "@/lib/models/Inventory";
 
 interface DummyJsonProduct {
   id: number;
+  sku: string;
   title: string;
   description: string;
   category: string;
@@ -32,9 +33,9 @@ export async function syncProductsFromDummyJson() {
   await Promise.all(
     products.map((p) =>
       Product.findOneAndUpdate(
-        { productId: p.id },
+        { productId: p.sku },
         {
-          productId: p.id,
+          productId: p.sku,
           title: p.title,
           description: p.description,
           category: p.category,
@@ -51,8 +52,8 @@ export async function syncProductsFromDummyJson() {
   await Promise.all(
     products.map((p) =>
       Inventory.findOneAndUpdate(
-        { productId: p.id },
-        { $setOnInsert: { productId: p.id, quantity: p.stock, updatedAt: new Date() } },
+        { productId: p.sku },
+        { $setOnInsert: { productId: p.sku, quantity: p.stock, updatedAt: new Date() } },
         { upsert: true }
       )
     )

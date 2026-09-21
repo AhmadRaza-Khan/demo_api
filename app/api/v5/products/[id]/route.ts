@@ -10,11 +10,7 @@ export async function GET(
   const auth = await resolveV5(req);
   if (!auth.ok) return auth.response;
 
-  const { id } = await params;
-  const productId = Number(id);
-  if (!Number.isInteger(productId)) {
-    return apiError(400, "invalid_id", "Product id must be an integer.");
-  }
+  const { id: productId } = await params;
 
   const product = await getProductById(productId);
   if (!product) {

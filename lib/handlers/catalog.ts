@@ -9,7 +9,7 @@ export async function listProducts() {
   return Product.find().sort({ productId: 1 }).lean();
 }
 
-export async function getProductById(id: number) {
+export async function getProductById(id: string) {
   await connectDB();
   await ensureProductsSynced();
   return Product.findOne({ productId: id }).lean();
@@ -35,7 +35,7 @@ export async function listInventory() {
   const titleById = new Map(products.map((p) => [p.productId, p.title]));
 
   return items
-    .sort((a, b) => a.productId - b.productId)
+    .sort((a, b) => a.productId.localeCompare(b.productId))
     .map((item) => ({
       productId: item.productId,
       title: titleById.get(item.productId) ?? "Unknown product",

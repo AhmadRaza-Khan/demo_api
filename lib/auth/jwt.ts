@@ -8,8 +8,16 @@ export interface AccessTokenPayload {
   clientId: string;
 }
 
-export function signAccessToken(payload: AccessTokenPayload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL_SECONDS });
+export interface SignedAccessToken {
+  token: string;
+  // ISO 8601 timestamp of the exact moment this token stops being valid.
+  expiresAt: string;
+}
+
+export function signAccessToken(payload: AccessTokenPayload): SignedAccessToken {
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL_SECONDS });
+  const { exp } = jwt.decode(token) as jwt.JwtPayload;
+  return { token, expiresAt: new Date(exp! * 1000).toISOString() };
 }
 
 export type VerifyResult =

@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import Merchant from "@/lib/models/Merchant";
 import RefreshToken from "@/lib/models/RefreshToken";
-import { signAccessToken, ACCESS_TOKEN_TTL_SECONDS } from "@/lib/auth/jwt";
+import { signAccessToken } from "@/lib/auth/jwt";
 import { apiError, apiSuccess } from "@/lib/http";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     return apiError(401, "invalid_credentials", "Unknown client_id / client_secret pair.");
   }
 
-  const access_token = signAccessToken({ merchantId: merchant.clientId, clientId: merchant.clientId });
+  const { token, expiresAt } = signAccessToken({ merchantId: merchant.clientId, clientId: merchant.clientId });
   const refresh_token = crypto.randomBytes(32).toString("hex");
 
   await RefreshToken.create({
@@ -39,9 +39,9 @@ export async function POST(req: NextRequest) {
   });
 
   return apiSuccess(200, "Token issued", {
-    access_token,
+    access_token: token,
     refresh_token,
     token_type: "Bearer",
-    expires_in: ACCESS_TOKEN_TTL_SECONDS,
+    expires_at: expiresAt,
   });
 }

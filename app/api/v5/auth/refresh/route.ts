@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import RefreshToken from "@/lib/models/RefreshToken";
-import { signAccessToken, ACCESS_TOKEN_TTL_SECONDS } from "@/lib/auth/jwt";
+import { signAccessToken } from "@/lib/auth/jwt";
 import { apiError, apiSuccess } from "@/lib/http";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   stored.revoked = true;
   await stored.save();
 
-  const access_token = signAccessToken({ merchantId: stored.merchantId, clientId: stored.merchantId });
+  const signed = signAccessToken({ merchantId: stored.merchantId, clientId: stored.merchantId });
   const refresh_token = crypto.randomBytes(32).toString("hex");
 
   await RefreshToken.create({
@@ -41,9 +41,9 @@ export async function POST(req: NextRequest) {
   });
 
   return apiSuccess(200, "Token refreshed", {
-    access_token,
+    access_token: signed.token,
     refresh_token,
     token_type: "Bearer",
-    expires_in: ACCESS_TOKEN_TTL_SECONDS,
+    expires_at: signed.expiresAt,
   });
 }

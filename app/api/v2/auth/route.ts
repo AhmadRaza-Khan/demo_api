@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import Merchant from "@/lib/models/Merchant";
-import { signAccessToken, ACCESS_TOKEN_TTL_SECONDS } from "@/lib/auth/jwt";
+import { signAccessToken } from "@/lib/auth/jwt";
 import { apiError, apiSuccess } from "@/lib/http";
 
 // v2: exchange client_id + client_secret for a short-lived (5 min) JWT.
@@ -20,11 +20,11 @@ export async function POST(req: NextRequest) {
     return apiError(401, "invalid_credentials", "Unknown client_id / client_secret pair.");
   }
 
-  const access_token = signAccessToken({ merchantId: merchant.clientId, clientId: merchant.clientId });
+  const { token, expiresAt } = signAccessToken({ merchantId: merchant.clientId, clientId: merchant.clientId });
 
   return apiSuccess(200, "Token issued", {
-    access_token,
+    access_token: token,
     token_type: "Bearer",
-    expires_in: ACCESS_TOKEN_TTL_SECONDS,
+    expires_at: expiresAt,
   });
 }
